@@ -25,9 +25,9 @@ def create_parser():
                         help='whether to set deterministic options for CUDNN backend (reproducable)')
 
     # dataset parameters
-    parser.add_argument('--batch_size', '-b', default=16, type=int, help='Training batch size')
-    parser.add_argument('--val_batch_size', '-vb', default=16, type=int, help='Validation batch size')
-    parser.add_argument('--num_workers', default=4, type=int)
+    parser.add_argument('--batch_size', '-b', default=56, type=int, help='Training batch size')
+    parser.add_argument('--val_batch_size', '-vb', default=56, type=int, help='Validation batch size')
+    parser.add_argument('--num_workers', default=12, type=int)
     parser.add_argument('--data_root', default='./data')
     parser.add_argument('--dataname', '-d', default='mmnist', type=str,
                         choices=['bair', 'mfmnist', 'mmnist', 'mmnist_cifar', 'noisymmnist', 'taxibj', 'human',
@@ -108,6 +108,18 @@ def create_parser():
     parser.add_argument('--metric_for_bestckpt', default='val_loss', type=str)
     parser.add_argument('--ckpt_path', default=None, type=str)
 
+    # Comet logger parameters
+    parser.add_argument('--use_comet', action='store_true', default=True,
+                        help='Whether to use Comet logger')
+    parser.add_argument('--comet_api_key', default="3wVTcWCAZ9LFRxOLDsqRDutwt", type=str,
+                        help='Comet API key. If not provided, will use COMET_API_KEY environment variable')
+    parser.add_argument('--comet_workspace', default=None, type=str,
+                        help='Comet workspace name')
+    parser.add_argument('--comet_project_name', default='openstl', type=str,
+                        help='Comet project name')
+    parser.add_argument('--comet_online', action='store_true', default=True,
+                        help='Whether to log to Comet online (True) or offline (False)')
+
     return parser
 
 
@@ -167,6 +179,13 @@ def default_parser():
         'filter_bias_and_bn': False,
         # Lightning parameters
         'gpus': [0],
-        'metric_for_bestckpt': 'val_loss'
+        'metric_for_bestckpt': 'val_loss',
+        
+        # Comet logger parameters
+        'use_comet': False,
+        'comet_api_key': None,
+        'comet_workspace': None,
+        'comet_project_name': 'OpenSTL',
+        'comet_online': True
     }
     return default_values

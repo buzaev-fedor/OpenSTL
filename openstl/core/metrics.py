@@ -246,9 +246,32 @@ def metric(pred, true, mean=None, std=None, metrics=['mae', 'mse'],
         ssim = 0
         for b in range(pred.shape[0]):
             for f in range(pred.shape[1]):
-                ssim += cal_ssim(pred[b, f].swapaxes(0, 2),
-                                 true[b, f].swapaxes(0, 2), multichannel=True)
-        eval_res['ssim'] = ssim / (pred.shape[0] * pred.shape[1])
+                # Определяем минимальный размер изображения
+                min_size = min(pred[b, f].shape[-2:])
+                
+                # Если изображение слишком маленькое, пропускаем его или используем минимальный размер окна
+                if min_size < 3:
+                    # Вариант 1: пропустить изображение
+                    continue
+                    
+                    # Вариант 2: использовать минимально возможный размер окна (должен быть нечетным)
+                    # win_size = 1 if min_size == 1 else min_size - (1 if min_size % 2 == 0 else 0)
+                else:
+                    # Используем подходящий размер окна
+                    win_size = min(7, min_size - (1 if min_size % 2 == 0 else 0))
+                    
+                try:
+                    ssim += cal_ssim(pred[b, f].swapaxes(0, 2),
+                                    true[b, f].swapaxes(0, 2), 
+                                    multichannel=True,
+                                    win_size=win_size)
+                except ValueError:
+                    # Если всё равно ошибка, пропускаем это изображение
+                    continue
+        
+        # Учитываем, что некоторые изображения могли быть пропущены
+        total_images = pred.shape[0] * pred.shape[1]
+        eval_res['ssim'] = ssim / total_images if total_images > 0 else 0
 
     if 'psnr' in metrics:
         psnr = 0

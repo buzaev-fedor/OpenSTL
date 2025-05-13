@@ -5,7 +5,7 @@ import math
 import torch
 import torch.nn as nn
 
-from timm.layers import DropPath, trunc_normal_
+from timm.models.layers import DropPath, trunc_normal_
 
 
 class DWConv(nn.Module):

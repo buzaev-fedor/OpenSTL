@@ -3,7 +3,7 @@ import torch.nn as nn
 from einops import rearrange
 from functools import partial
 from itertools import accumulate
-from timm.layers import DropPath, activations
+from timm.models.layers import DropPath, activations
 from timm.models._efficientnet_blocks import SqueezeExcite, InvertedResidual
 
 # version adaptation for PyTorch > 1.7.1

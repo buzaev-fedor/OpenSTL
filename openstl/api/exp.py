@@ -13,6 +13,7 @@ from openstl.utils import (get_dataset, measure_throughput, SetupCallback, Epoch
 
 from lightning import seed_everything, Trainer
 import lightning.pytorch.callbacks as lc
+from lightning.pytorch.loggers import CometLogger
 
 
 class BaseExperiment(object):
@@ -36,14 +37,34 @@ class BaseExperiment(object):
         self.method = method_maps[self.args.method](steps_per_epoch=len(self.data.train_loader), \
             test_mean=self.data.test_mean, test_std=self.data.test_std, save_dir=save_dir, **self.config)
         callbacks, self.save_dir = self._load_callbacks(args, save_dir, ckpt_dir)
-        self.trainer = self._init_trainer(self.args, callbacks, strategy)
+        logger = self._setup_logger(args, save_dir)
+        self.trainer = self._init_trainer(self.args, callbacks, strategy, logger)
 
-    def _init_trainer(self, args, callbacks, strategy):
+    def _setup_logger(self, args, save_dir):
+        """Setup experiment logger"""
+        logger = None
+        if hasattr(args, 'use_comet') and args.use_comet:
+            # Configure Comet logger
+            comet_logger = CometLogger(
+                api_key=args.comet_api_key,
+                workspace=args.comet_workspace,
+                project_name=args.comet_project_name,
+                experiment_name=args.ex_name,
+                save_dir=save_dir,
+                offline=not args.comet_online
+            )
+            # Log hyperparameters
+            comet_logger.log_hyperparams(self.config)
+            logger = comet_logger
+        return logger
+
+    def _init_trainer(self, args, callbacks, strategy, logger=None):
         return Trainer(devices=args.gpus,  # Use these GPUs
                        max_epochs=args.epoch,  # Maximum number of epochs to train for
                        strategy=strategy,   # 'ddp', 'deepspeed_stage_2', 'ddp_find_unused_parameters_false'
                        accelerator='gpu',  # Use distributed data parallel
-                       callbacks=callbacks
+                       callbacks=callbacks,
+                       logger=logger
                     )
 
     def _load_callbacks(self, args, save_dir, ckpt_dir):
@@ -106,7 +127,7 @@ class BaseExperiment(object):
             assign_gpu = 'cuda:' + (str(args.gpus[0]) if len(args.gpus) == 1 else '0')
             device = torch.device(assign_gpu)
         T, C, H, W = args.in_shape
-        if args.method in ['simvp', 'tau', 'mmvp', 'wast']:
+        if args.method in ['simvp', 'tau', 'mmvp', 'wast', 'simvp_adr']:
             input_dummy = torch.ones(1, args.pre_seq_length, C, H, W).to(device)
         elif args.method == 'phydnet':
             _tmp_input1 = torch.ones(1, args.pre_seq_length, C, H, W).to(device)
