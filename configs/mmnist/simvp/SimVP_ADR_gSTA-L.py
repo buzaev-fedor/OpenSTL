@@ -9,7 +9,7 @@ N_T = 24
 N_S = 4
 mlp_ratio = 8.
 drop = 0.
-drop_path = 0.1
+# drop_path = 0.1
 
 # ADR specific parameters
 adr_layers = 2
@@ -19,7 +19,7 @@ device = 'cuda'  # Add device parameter
 # training
 lr = 1e-3
 batch_size = 56
-drop_path = 0.1
+# drop_path = 0.1
 sched = 'onecycle'
 
 # data
@@ -31,5 +31,5 @@ aft_seq_length = 10
 # log and save
 log_step = 5
 save_every = 100
-val_every = 10
+val_every = 20
 epoch = 1000

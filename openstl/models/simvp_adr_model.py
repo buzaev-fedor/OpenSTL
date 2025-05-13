@@ -338,11 +338,12 @@ class ColorPreservingAdvection(nn.Module):
         
         grid_h, grid_w = shape[0], shape[1]
         y, x = torch.meshgrid(torch.linspace(-1, 1, grid_h), torch.linspace(-1, 1, grid_w))
-        self.grid = torch.stack((x, y), dim=-1).unsqueeze(0).unsqueeze(0).to(device)
+        self.grid = torch.stack((x, y), dim=-1).unsqueeze(0).unsqueeze(0)
 
     def forward(self, T, U, V):
         UV = torch.stack((U, V), dim=-1)
-        transformation_grid = self.grid + UV
+        grid = self.grid.to(T.device)
+        transformation_grid = grid + UV
         Th = F.grid_sample(T, transformation_grid.squeeze(1), align_corners=True)
         return Th
 

@@ -13,7 +13,7 @@ def create_parser():
                         help='Whether to use distributed training (DDP)')
     parser.add_argument('--res_dir', default='work_dirs', type=str)
     parser.add_argument('--ex_name', '-ex', default='Debug', type=str)
-    parser.add_argument('--fp16', action='store_true', default=False,
+    parser.add_argument('--fp16', action='store_true', default=True,
                         help='Whether to use Native AMP for mixed precision training (PyTorch=>1.6.0)')
     parser.add_argument('--torchscript', action='store_true', default=False,
                         help='Whether to use torchscripted model')
@@ -25,9 +25,9 @@ def create_parser():
                         help='whether to set deterministic options for CUDNN backend (reproducable)')
 
     # dataset parameters
-    parser.add_argument('--batch_size', '-b', default=56, type=int, help='Training batch size')
-    parser.add_argument('--val_batch_size', '-vb', default=56, type=int, help='Validation batch size')
-    parser.add_argument('--num_workers', default=12, type=int)
+    parser.add_argument('--batch_size', '-b', default=54, type=int, help='Training batch size')
+    parser.add_argument('--val_batch_size', '-vb', default=54, type=int, help='Validation batch size')
+    parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--data_root', default='./data')
     parser.add_argument('--dataname', '-d', default='mmnist', type=str,
                         choices=['bair', 'mfmnist', 'mmnist', 'mmnist_cifar', 'noisymmnist', 'taxibj', 'human',
@@ -65,8 +65,10 @@ def create_parser():
 
     # Training parameters (optimizer)
     parser.add_argument('--epoch', '-e', default=None, type=int, help='end epochs (default: 200)')
-    parser.add_argument('--log_step', default=1, type=int, help='Log interval by step')
-    parser.add_argument('--opt', default='adam', type=str, metavar='OPTIMIZER',
+    parser.add_argument('--log_step', default=100, type=int, help='Log interval by step')
+    parser.add_argument('--eval_interval', default=5, type=int, 
+                        help='Interval (in epochs) to calculate and log metrics (default: 5)')
+    parser.add_argument('--opt', default='adamw', type=str, metavar='OPTIMIZER',
                         help='Optimizer (default: "adam"')
     parser.add_argument('--opt_eps', default=None, type=float, metavar='EPSILON',
                         help='Optimizer epsilon (default: None, use opt default)')
@@ -158,6 +160,7 @@ def default_parser():
         # Training parameters (optimizer)
         'epoch': 200,
         'log_step': 1,
+        'eval_interval': 5,
         'opt': 'adam',
         'opt_eps': None,
         'opt_betas': None,

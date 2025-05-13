@@ -9,8 +9,43 @@ from openstl.utils import (create_parser, default_parser, get_dist_info, load_co
                            update_config)
 
 
+class MetricLogger(BaseExperiment):
+    """Extension of BaseExperiment to log metrics at specified intervals"""
+    
+    def __init__(self, args):
+        super().__init__(args)
+        self.eval_interval = args.eval_interval
+        
+    def train(self):
+        """Override train method to evaluate and log metrics periodically"""
+        rank, _ = get_dist_info()
+        
+        for epoch in range(self.start_epoch, self.epochs):
+            # Run regular training for this epoch
+            self.train_one_epoch(epoch)
+            
+            # Check if we should evaluate at this epoch
+            if self.eval_interval > 0 and (epoch + 1) % self.eval_interval == 0:
+                if rank == 0:
+                    print(f"Evaluating at epoch {epoch+1}...")
+                metrics = self.validate(epoch)
+                
+                # Log to Comet if enabled
+                if hasattr(self, 'logger') and self.args.use_comet:
+                    for metric_name, metric_value in metrics.items():
+                        self.logger.log_metric(f'val_{metric_name}', metric_value, step=epoch+1)
+        
+        # Finalize training as in the original method
+        if hasattr(self, 'scheduler'):
+            self.scheduler.step()
+        if hasattr(self, 'logger'):
+            self.logger.finalize()
+
+
 if __name__ == '__main__':
     args = create_parser().parse_args()
+    # Add evaluation interval parameter
+    args.eval_interval = getattr(args, 'eval_interval', 5)  # Default to every 5 epochs
     config = args.__dict__
 
     cfg_path = osp.join('./configs', args.dataname, f'{args.method}.py') \
@@ -29,7 +64,8 @@ if __name__ == '__main__':
                 config[attribute] = default_values[attribute]
 
     print('>'*35 + ' training ' + '<'*35)
-    exp = BaseExperiment(args)
+    # Use the new MetricLogger class instead of BaseExperiment
+    exp = MetricLogger(args) if not args.test else BaseExperiment(args)
     rank, _ = get_dist_info()
     exp.train()
 
