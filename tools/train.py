@@ -15,31 +15,48 @@ class MetricLogger(BaseExperiment):
     def __init__(self, args):
         super().__init__(args)
         self.eval_interval = args.eval_interval
+        # Ensure required attributes exist
+        if not hasattr(self, 'start_epoch'):
+            self.start_epoch = 0
+        if not hasattr(self, 'epochs'):
+            self.epochs = args.epoch
         
     def train(self):
         """Override train method to evaluate and log metrics periodically"""
         rank, _ = get_dist_info()
         
-        for epoch in range(self.start_epoch, self.epochs):
-            # Run regular training for this epoch
-            self.train_one_epoch(epoch)
-            
-            # Check if we should evaluate at this epoch
-            if self.eval_interval > 0 and (epoch + 1) % self.eval_interval == 0:
-                if rank == 0:
-                    print(f"Evaluating at epoch {epoch+1}...")
-                metrics = self.validate(epoch)
-                
-                # Log to Comet if enabled
-                if hasattr(self, 'logger') and self.args.use_comet:
-                    for metric_name, metric_value in metrics.items():
-                        self.logger.log_metric(f'val_{metric_name}', metric_value, step=epoch+1)
+        # Get original training method to ensure we have access to all necessary variables
+        # This helps us maintain compatibility with the parent class
+        orig_train_method = super().train
         
-        # Finalize training as in the original method
-        if hasattr(self, 'scheduler'):
-            self.scheduler.step()
-        if hasattr(self, 'logger'):
-            self.logger.finalize()
+        # If parent has train_one_epoch, use it; otherwise define our own loop
+        if hasattr(self, 'train_one_epoch'):
+            for epoch in range(self.start_epoch, self.epochs):
+                # Run regular training for this epoch
+                self.train_one_epoch(epoch)
+                
+                # Check if we should evaluate at this epoch
+                if self.eval_interval > 0 and (epoch + 1) % self.eval_interval == 0:
+                    if rank == 0:
+                        print(f"Evaluating at epoch {epoch+1}...")
+                    if hasattr(self, 'validate'):
+                        metrics = self.validate(epoch)
+                        
+                        # Log to Comet if enabled
+                        if hasattr(self, 'logger') and self.args.use_comet:
+                            for metric_name, metric_value in metrics.items():
+                                self.logger.log_metric(f'val_{metric_name}', metric_value, step=epoch+1)
+            
+            # Finalize training
+            if hasattr(self, 'scheduler'):
+                self.scheduler.step()
+            if hasattr(self, 'logger'):
+                self.logger.finalize()
+        else:
+            # If no train_one_epoch method exists, use the parent's train method
+            # but we'll lose the periodic evaluation capability
+            print("Warning: Falling back to parent's train method; periodic eval disabled.")
+            orig_train_method()
 
 
 if __name__ == '__main__':

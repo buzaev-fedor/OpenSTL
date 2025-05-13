@@ -5,15 +5,15 @@ import time
 import os.path as osp
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 
+from lightning import seed_everything, Trainer
+import lightning.pytorch.callbacks as lc
+from lightning.pytorch.loggers import CometLogger
+import comet_ml
 import torch
 
 from openstl.methods import method_maps
 from openstl.datasets import BaseDataModule
 from openstl.utils import (get_dataset, measure_throughput, SetupCallback, EpochEndCallback, BestCheckpointCallback)
-
-from lightning import seed_everything, Trainer
-import lightning.pytorch.callbacks as lc
-from lightning.pytorch.loggers import CometLogger
 
 
 class BaseExperiment(object):
