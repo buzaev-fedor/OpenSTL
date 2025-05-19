@@ -44,7 +44,7 @@ class SimVP_ADR_Model(nn.Module):
         if self.use_adr:
             self.adr_processor = ADRProcessor(
                 in_channels=hid_S,
-                hid_channels=adr_hid_dim,
+                hid_channels=hid_S,
                 nlayers=adr_layers,
                 imsz=[H, W],
                 device=device
@@ -80,7 +80,7 @@ class SimVP_ADR_Model(nn.Module):
                 hid_adr[:, t, :, :, :] = hid_processed
             
             # Reshape back
-            hid = hid_adr
+            hid = hid + hid_adr
 
 
         # if self.use_adr:
@@ -373,7 +373,7 @@ class AdvectionColorBlock(nn.Module):
         self.TNV = CLP(channels, channels, mesh_size)
         
     def forward(self, x, t):
-        nw, nh = x.shape[2], x.shape[3]
+        nw, nh = x.shape[3], x.shape[2]
         
         teU = t.reshape([-1, 1, 1, 1])*self.TimeEmbedU
         teU = self.TNU(teU) 
@@ -410,7 +410,7 @@ class ADRProcessor(nn.Module):
         super(ADRProcessor, self).__init__()
         
         self.nlayers = nlayers
-        self.Open = CLP(in_channels, hid_channels, imsz)
+        # self.Open = CLP(in_channels, hid_channels, imsz)
         
         self.Adv = nn.ModuleList()
         self.DR = nn.ModuleList()
@@ -424,26 +424,27 @@ class ADRProcessor(nn.Module):
             self.Adv.append(Advi)
             self.DR.append(DRi)
        
-        self.Close = nn.Conv2d(hid_channels, in_channels, kernel_size=1, stride=1, padding=0)
+        # self.Close = nn.Conv2d(hid_channels, in_channels, kernel_size=1, stride=1, padding=0)
         self.h = 1/imsz[0]
                 
     def forward(self, x, t):
         
         # Increase the dimensionality
-        z = self.Open(x)
+        # z = self.Open(x)
         
         # Each residual network layer learns sequential advection, diffusion and reaction
         for i in range(self.nlayers):
             # Advection Layer: Learns the advection of color pixels at higher dimension
-            dz = self.Adv[i](z, t)
+            dz = self.Adv[i](x, t)
+            # dz = self.Adv[i](z, t)
             
             # Learns the diffusion and reaction of color pixels at higher dimension
             dz = self.DR[i](dz)
             
             # Residual Connection
-            z = z + self.h*dz
+            x = x + self.h*dz
         
         # Decrease the dimensionality
-        x = self.Close(z)
+        # x = self.Close(z)
         
         return x 

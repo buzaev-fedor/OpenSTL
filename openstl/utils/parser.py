@@ -11,7 +11,7 @@ def create_parser():
                         help='Name of device to use for tensor computations (cuda/cpu)')
     parser.add_argument('--dist', action='store_true', default=False,
                         help='Whether to use distributed training (DDP)')
-    parser.add_argument('--res_dir', default='work_dirs', type=str)
+    parser.add_argument('--res_dir', default='/workspace-SR003.nfs2/buzaev-fa/work_dirs', type=str)
     parser.add_argument('--ex_name', '-ex', default='Debug', type=str)
     parser.add_argument('--fp16', action='store_true', default=True,
                         help='Whether to use Native AMP for mixed precision training (PyTorch=>1.6.0)')
@@ -25,8 +25,8 @@ def create_parser():
                         help='whether to set deterministic options for CUDNN backend (reproducable)')
 
     # dataset parameters
-    parser.add_argument('--batch_size', '-b', default=54, type=int, help='Training batch size')
-    parser.add_argument('--val_batch_size', '-vb', default=54, type=int, help='Validation batch size')
+    parser.add_argument('--batch_size', '-b', default=40, type=int, help='Training batch size')
+    parser.add_argument('--val_batch_size', '-vb', default=40, type=int, help='Validation batch size')
     parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--data_root', default='./data')
     parser.add_argument('--dataname', '-d', default='mmnist', type=str,
@@ -66,7 +66,7 @@ def create_parser():
     # Training parameters (optimizer)
     parser.add_argument('--epoch', '-e', default=None, type=int, help='end epochs (default: 200)')
     parser.add_argument('--log_step', default=100, type=int, help='Log interval by step')
-    parser.add_argument('--eval_interval', default=5, type=int, 
+    parser.add_argument('--eval_interval', default=20, type=int, 
                         help='Interval (in epochs) to calculate and log metrics (default: 5)')
     parser.add_argument('--opt', default='adamw', type=str, metavar='OPTIMIZER',
                         help='Optimizer (default: "adam"')
@@ -96,7 +96,7 @@ def create_parser():
                         help='lower lr bound for cyclic schedulers that hit 0 (1e-5)')
     parser.add_argument('--final_div_factor', type=float, default=1e4,
                         help='min_lr = initial_lr/final_div_factor for onecycle scheduler')
-    parser.add_argument('--warmup_epoch', type=int, default=0, metavar='N',
+    parser.add_argument('--warmup_epoch', type=int, default=100, metavar='N',
                         help='epochs to warmup LR, if scheduler supports')
     parser.add_argument('--decay_epoch', type=float, default=100, metavar='N',
                         help='epoch interval to decay LR')
