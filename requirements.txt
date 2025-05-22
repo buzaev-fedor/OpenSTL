@@ -1,3 +1,8 @@
 -r requirements/optional.txt
 -r requirements/runtime.txt
 -r requirements/tests.txt
+
+scikit-image>=0.19.2
+jupyterlab
+timm>=0.6.11
+einops>=0.6.1

@@ -64,7 +64,7 @@ def create_parser():
                         help='Whether to allow overwriting the provided config file with args')
 
     # Training parameters (optimizer)
-    parser.add_argument('--epoch', '-e', default=None, type=int, help='end epochs (default: 200)')
+    parser.add_argument('--epoch', '-e', default=10000, type=int, help='end epochs (default: 200)')
     parser.add_argument('--log_step', default=100, type=int, help='Log interval by step')
     parser.add_argument('--eval_interval', default=20, type=int, 
                         help='Interval (in epochs) to calculate and log metrics (default: 5)')

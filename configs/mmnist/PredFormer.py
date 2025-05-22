@@ -1,0 +1,32 @@
+method = 'predformer'
+
+model_config = {
+    # image h w c
+    'height': 64,
+    'width': 64,
+    'num_channels': 1,
+    # video length in and out
+    'pre_seq': 10,
+    'after_seq': 10,
+    # patch size
+    'patch_size': 8,
+    'dim': 256, 
+    'heads': 8,
+    'dim_head': 32,
+    # dropout
+    'dropout': 0.0,
+    'attn_dropout': 0.0,
+    'drop_path': 0.0,
+    'scale_dim': 4,
+    # depth
+    'depth': 1,
+    'Ndepth': 6, # For FullAttention-24, for BinaryST, BinaryST, FacST, FacTS-12, for TST,STS-8, for TSST, STTS-6
+    
+    # MoE parameters
+    'use_moe': False,  # Set to False to disable MoE
+    # 'num_experts': 8,  # Number of expert networks
+    # 'top_k': 2,       # Number of experts to route to for each token
+    # 'noisy_gate': True,  # Add noise to router for exploration
+    # 'gate_noise': 0.1,  # Amount of noise to add
+    # 'moe_loss_weight': 0.01  # Weight for the MoE auxiliary loss
+}
